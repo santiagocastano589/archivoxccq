@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Panel de Documentos</title>
+</head>
+<body>
+  <h2>Bienvenido, <span id="usuarioNombre"></span></h2>
+  <button onclick="cerrarSesion()">Cerrar sesión</button>
+
+  <h3>📤 Subir nuevo documento</h3>
+<form id="formSubida" enctype="multipart/form-data">
+  <input type="file" name="archivo" required />
+  <input type="hidden" name="usuario" id="inputUsuario" />
+  <button type="submit">Subir</button>
+</form>
+
+  <h3>📄 Documentos disponibles</h3>
+  <table border="1" cellpadding="5">
+    <thead>
+      <tr>
+        <th>Archivo</th>
+        <th>Estado</th>
+        <th>Subido por</th>
+        <th>Fecha</th>
+        <th>Acción</th>
+      </tr>
+    </thead>
+    <tbody id="tablaDocumentos">
+      <!-- Aquí se insertan los documentos dinámicamente -->
+    </tbody>
+  </table>
+
+  <h3>📬 Documentos que te han compartido</h3>
+<table border="1">
+  <thead>
+    <tr>
+      <th>Archivo</th>
+      <th>Enviado por</th>
+      <th>Firma</th>
+      <th>Estado</th>
+      <th>Fecha</th>
+    </tr>
+  </thead>
+  <tbody id="tablaCompartidos"></tbody>
+</table>
+
+<h3>📤 Enviar documento</h3>
+<form id="formEnviar">
+  <label>Área destino:</label>
+  <select id="selectArea">
+    <option value="2">Archivo</option>
+  </select><br><br>
+
+  <label>Usuario destino:</label>
+  <select id="selectUsuario"></select><br><br>
+
+  <input type="hidden" id="idDocumentoEnviar">
+  <button type="submit">Enviar</button>
+</form>
+
+
+  <script>
+    // Simular sesión (se reemplaza luego por JWT o localStorage)
+    const nombreUsuario = localStorage.getItem('usuario_nombre');
+        if (!nombreUsuario) {
+        // Si no existe, redirige
+        window.location.href = 'index.html';
+        } else {
+        document.getElementById('usuarioNombre').textContent = nombreUsuario;
+        }
+
+
+    function cerrarSesion() {
+      localStorage.clear();
+      window.location.href = 'index.html';
+    }
+
+    async function cargarDocumentos() {
+    try {
+      const response = await fetch('http://localhost:3000/documentos');
+      const documentos = await response.json();
+
+      const tabla = document.getElementById('tablaDocumentos');
+      tabla.innerHTML = ''; // Limpia tabla antes de volver a llenarla
+
+      documentos.forEach(doc => {
+        const fila = `
+          <tr>
+            <td><a href="${doc.ruta}" target="_blank">${doc.nombre_archivo}</a></td>
+            <td>${doc.estado}</td>
+            <td>${doc.usuario_subio}</td>
+            <td>${new Date(doc.fecha_subida).toLocaleString()}</td>
+            <td>
+                <button onclick="verDocumento(${doc.id})">Ver</button>
+                <button onclick="reenviarDocumento(${doc.id})">Reenviar</button>
+            </td>
+
+          </tr>
+        `;
+        tabla.innerHTML += fila;
+      });
+
+    } catch (error) {
+      console.error('❌ Error al cargar documentos:', error);
+    }
+  }
+
+  function verDocumento(id) {
+    alert(`Aquí se mostraría el documento con ID: ${id}`);
+  }
+
+  // Ejecutar al cargar la página
+  window.onload = function () {
+    const usuario = localStorage.getItem('usuario_nombre');
+    if (!usuario) {
+      window.location.href = 'index.html';
+    } else {
+      document.getElementById('usuarioNombre').textContent = usuario;
+      cargarDocumentos();
+    }
+  }
+
+  </script>
+  <script>
+  // Cargar nombre en campo oculto
+  document.getElementById('inputUsuario').value = localStorage.getItem('usuario_nombre');
+
+  document.getElementById('formSubida').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    const response = await fetch('http://localhost:3000/documentos/subir', {
+      method: 'POST',
+      body: formData
+    });
+
+    const result = await response.json();
+    alert(result.mensaje || result.error);
+
+    // Refrescar tabla si todo salió bien
+    if (response.ok) {
+      document.getElementById('tablaDocumentos').innerHTML = '';
+      cargarDocumentos();
+    }
+  });
+
+//  function reenviarDocumento(id) {
+//   const area = prompt('¿A qué área lo vas a enviar?');
+//   if (!area) return;
+
+//   const firmado_por = localStorage.getItem('usuario_nombre');
+//   const data = {
+//     id_documento: id,
+//     nuevo_usuario: null, // se puede implementar más adelante
+//     nueva_area: area,
+//     firmado_por: firmado_por
+//   };
+
+//   fetch('http://localhost:3000/documentos/reenviar', {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify(data)
+//   })
+//   .then(res => res.json())
+//   .then(res => {
+//     alert(res.mensaje || res.error);
+//     cargarDocumentos();
+//   });
+// }
+
+
+document.getElementById('formEnviar').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const id_documento = document.getElementById('idDocumentoEnviar').value;
+  const para_usuario = document.getElementById('selectUsuario').value;
+  const de_usuario = localStorage.getItem('usuario_nombre');
+
+  const body = {
+    id_documento,
+    de_usuario,
+    para_usuario,
+    firma: de_usuario // puedes agregar una firma real más adelante
+  };
+
+  const res = await fetch('http://localhost:3000/documentos/compartir', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  const result = await res.json();
+  alert(result.mensaje || result.error);
+});
+
+
+function reenviarDocumento(id) {
+  document.getElementById('idDocumentoEnviar').value = id;
+  cargarAreas();
+}
+
+
+async function cargarCompartidos() {
+  const usuario = localStorage.getItem('usuario_nombre');
+  const response = await fetch(`http://localhost:3000/documentos/compartidos-conmigo/${usuario}`);
+  const docs = await response.json();
+
+  const tabla = document.getElementById('tablaCompartidos');
+  tabla.innerHTML = '';
+
+  docs.forEach(doc => {
+    tabla.innerHTML += `
+      <tr>
+        <td>${doc.nombre_archivo}</td>
+        <td>${doc.de_usuario}</td>
+        <td>${doc.firma}</td>
+        <td>${doc.estado}</td>
+        <td>${new Date(doc.fecha).toLocaleString()}</td>
+      </tr>
+    `;
+  });
+}
+
+window.onload = function () {
+  // También llamas a cargarCompartidos();
+  cargarDocumentos();
+  cargarCompartidos();
+};
+
+async function cargarAreas() {
+  const res = await fetch('http://localhost:3000/documentos/areas');
+  const areas = await res.json();
+  const select = document.getElementById('selectArea');
+  select.innerHTML = '';
+
+  areas.forEach(area => {
+    select.innerHTML += `<option value="${area.id}">${area.nombre}</option>`;
+  });
+
+  // Cargar usuarios del primer área
+  cargarUsuarios(select.value);
+}
+
+async function cargarUsuarios(areaId) {
+  const res = await fetch(`http://localhost:3000/documentos/usuarios-por-area/${areaId}`);
+  const usuarios = await res.json();
+  const select = document.getElementById('selectUsuario');
+  select.innerHTML = '';
+
+  usuarios.forEach(usuario => {
+    select.innerHTML += `<option value="${usuario.nombre}">${usuario.nombre}</option>`;
+  });
+}
+
+document.getElementById('selectArea').addEventListener('change', function () {
+  cargarUsuarios(this.value);
+});
+
+
+
+</script>
+</body>
+</html>
