@@ -3,18 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <title>Login - Gestión Documental</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <h2>Iniciar Sesión</h2>
-  <form id="loginForm">
-    <label>Usuario:</label><br />
-    <input type="text" name="usuario" required /><br /><br />
-    <label>Contraseña:</label><br />
-    <input type="password" name="clave" required /><br /><br />
-    <button type="submit">Entrar</button>
-  </form>
 
-  <p id="mensaje" style="color:red;"></p>
+  <header>
+    <h3>Clinica Central del Quindio</h3>
+  </header>
+
+  <main>
+      <div class="log">
+      <h2>Iniciar Sesión</h2>
+        <form id="loginForm">
+          <label>Usuario:</label><br />
+          <input type="text" name="usuario" placeholder="Ingrese Usuario" required /><br /><br />
+          <label>Contraseña:</label><br />
+          <input type="password" name="clave" placeholder="Ingrese su Contraseña"  required /><br /><br />
+          <div class="send">
+            <button type="submit">Entrar</button>
+          </div>
+          
+        </form>
+    </div>
+    
+
+    <p id="mensaje" style="color:red;"></p>
+  </main>
+  
 
   <script>
     document.getElementById('loginForm').addEventListener('submit', async function (e) {

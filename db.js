@@ -1,15 +1,25 @@
 const sql = require('mssql');
 
 const config = {
-  user: 'sa',
-  password: '12345',
-  server: '127.0.0.1',
-  database: 'DocumentosDB',
+  user: 'pruebas',
+  password: 'CCQPrueb@s6',
+  server: '172.30.0.6',
+  database: 'HOSVITAL_FE',
   options: {
     encrypt: false,
     trustServerCertificate: true
   }
 };
+// const config = {
+//   user: 'sa',
+//   password: '12345',
+//   server: '127.0.0.1',
+//   database: 'DocumentosDB',
+//   options: {
+//     encrypt: false,
+//     trustServerCertificate: true
+//   }
+// };
 
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
